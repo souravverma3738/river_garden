@@ -13,6 +13,7 @@ import { Label } from './Component/ui/label';
 import { AssignSupervisor } from './pages/AssignSupervisor';
 import { UnassignSupervisor } from './pages/UnassignSupervisor';
 import { CoursePlayer } from './pages/CoursePlayer'; // ⭐ NEW
+import { Profile } from './pages/Profile';
 
 import {
   Card,
@@ -480,6 +481,16 @@ function App() {
                   </div>
                 ) : (
                   <Navigate to="/dashboard" replace />
+                )
+              }
+            />
+             <Route
+              path="/profile"
+              element={
+                currentUser ? (
+                  <Profile />
+                ) : (
+                  <Navigate to="/profile" replace />
                 )
               }
             />

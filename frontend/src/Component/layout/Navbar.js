@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Bell, User, LogOut, Settings, BookOpen } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Bell, User, LogOut, BookOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 export const Navbar = ({ user, onLogout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isLandingPage = location.pathname === '/' || location.pathname === '/home';
 
   const navigation = isLandingPage ? [
@@ -80,13 +81,9 @@ export const Navbar = ({ user, onLogout }) => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={onLogout}>
