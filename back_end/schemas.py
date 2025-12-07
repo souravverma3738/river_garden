@@ -41,6 +41,7 @@ class CourseBase(BaseModel):
     duration: str
     modules: int = 1
     thumbnail: Optional[str] = None
+    video_url: Optional[str] = None
     expiry_days: int = 365
 
 

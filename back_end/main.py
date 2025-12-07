@@ -26,7 +26,7 @@ from schemas import UserStats, ComplianceData, CertificateResponse, EnrollmentRe
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 3000
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -368,6 +368,7 @@ def get_courses(
                 "thumbnail": c.thumbnail,
                 "expiry_days": c.expiry_days,
                 "assigned_roles": c.assigned_roles,
+                "video_url": c.video_url,
             }
             for c in user_courses
         ]

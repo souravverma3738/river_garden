@@ -24,6 +24,7 @@ def seed_courses(db: Session):
             "modules": 5,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1584438784894-089d6a62b8d5?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
             "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
         },
         {
@@ -35,8 +36,10 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
             "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
         },
+
         {
             "title": "Fire Safety",
             "category": CourseCategory.MANDATORY,
@@ -46,6 +49,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1598387993411-5d5a06d0c7cc?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
             "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
         },
         {
@@ -57,6 +61,7 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1580983557125-27b3b36e5a2e?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
             "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
         },
         {
@@ -68,6 +73,7 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1556911220-e15b29be8c83?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
             "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
         },
         {
@@ -79,6 +85,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1605902711622-cfb43c44367d?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
             "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
         },
 
@@ -94,6 +101,7 @@ def seed_courses(db: Session):
             "modules": 5,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
             "assigned_roles": ["Carer"],
         },
         {
@@ -105,6 +113,7 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1580281658624-7f6f729bb1c7?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
             "assigned_roles": ["Carer"],
         },
         {
@@ -116,6 +125,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
             "assigned_roles": ["Carer"],
         },
         {
@@ -127,6 +137,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1521790361543-f645cf042ec4?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
             "assigned_roles": ["Carer", "Driver"],
         },
 
@@ -142,6 +153,7 @@ def seed_courses(db: Session):
             "modules": 8,
             "expiry_days": 180,
             "thumbnail": "https://images.unsplash.com/photo-1580281658624-7f6f729bb1c7?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
             "assigned_roles": ["Nurse"],
         },
         {
@@ -153,6 +165,7 @@ def seed_courses(db: Session):
             "modules": 5,
             "expiry_days": 180,
             "thumbnail": "https://images.unsplash.com/photo-1580281656219-ee3e6db031ff?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
             "assigned_roles": ["Nurse"],
         },
         {
@@ -164,6 +177,7 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 180,
             "thumbnail": "https://images.unsplash.com/photo-1580281658940-e418f3802c30?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
             "assigned_roles": ["Nurse"],
         },
 
@@ -179,6 +193,7 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
             "assigned_roles": ["Supervisor"],
         },
         {
@@ -190,6 +205,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
             "assigned_roles": ["Supervisor"],
         },
         {
@@ -201,6 +217,7 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
             "assigned_roles": ["Supervisor"],
         },
 
@@ -216,6 +233,7 @@ def seed_courses(db: Session):
             "modules": 4,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1576765975876-8c9c0a4a79e4?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
             "assigned_roles": ["Driver"],
         },
         {
@@ -227,6 +245,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
             "assigned_roles": ["Driver"],
         },
 
@@ -242,6 +261,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 730,
             "thumbnail": "https://images.unsplash.com/photo-1515169067865-5387d99f67a6?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
             "assigned_roles": ["Office Staff"],
         },
         {
@@ -253,6 +273,7 @@ def seed_courses(db: Session):
             "modules": 3,
             "expiry_days": 730,
             "thumbnail": "https://images.unsplash.com/photo-1560264418-c4445382edbc?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
             "assigned_roles": ["Office Staff"],
         },
 
@@ -268,6 +289,7 @@ def seed_courses(db: Session):
             "modules": 1,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
             "assigned_roles": ["Carer", "Nurse", "Supervisor"],
         },
         {
@@ -279,6 +301,7 @@ def seed_courses(db: Session):
             "modules": 1,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1580281656219-ee3e6db031ff?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
             "assigned_roles": ["Carer", "Nurse"],
         },
         {
@@ -290,6 +313,7 @@ def seed_courses(db: Session):
             "modules": 1,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
             "assigned_roles": ["Carer", "Nurse"],
         },
         {
@@ -301,6 +325,7 @@ def seed_courses(db: Session):
             "modules": 1,
             "expiry_days": 365,
             "thumbnail": "https://images.unsplash.com/photo-1603398938378-e54eabbb4c59?w=400",
+            "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
             "assigned_roles": ["Carer", "Nurse"],
         },
     ]

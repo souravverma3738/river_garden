@@ -79,6 +79,7 @@ class Course(Base):
     duration = Column(String, nullable=False)  # e.g., "45 mins"
     modules = Column(Integer, default=1)
     thumbnail = Column(String, nullable=True)
+    video_url = Column(String, nullable=True)
     expiry_days = Column(Integer, default=365)
 
     # NEW: Store which roles this course is assigned to
