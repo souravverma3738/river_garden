@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Courses } from './pages/Courses';
 import { Certificates } from './pages/Certificates';
 import { TeamDashboard } from './pages/TeamDashboard';
+import { SupervisorDashboard } from './pages/SupervisorDashboard';
 import { Button } from './Component/ui/button';
 import { Input } from './Component/ui/input';
 import { Label } from './Component/ui/label';
@@ -14,6 +15,7 @@ import { AssignSupervisor } from './pages/AssignSupervisor';
 import { UnassignSupervisor } from './pages/UnassignSupervisor';
 import { CoursePlayer } from './pages/CoursePlayer'; // ⭐ NEW
 import { Profile } from './pages/Profile';
+import { Toaster } from './Component/ui/sonner';
 
 import {
   Card,
@@ -400,6 +402,7 @@ function App() {
     <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar user={currentUser} onLogout={handleLogout} />
+        <Toaster />
         <main className="flex-1">
           <Routes>
             {/* Public Routes */}
@@ -411,7 +414,9 @@ function App() {
               element={
                 currentUser ? (
                   <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                    {currentUser.role === 'Team Leader' || currentUser.role === 'Care Manager' ? (
+                    {currentUser.role === 'Supervisor' ? (
+                      <SupervisorDashboard />
+                    ) : currentUser.role === 'Team Leader' || currentUser.role === 'Care Manager' ? (
                       <TeamDashboard />
                     ) : (
                       <Dashboard userRole={currentUser.role} />

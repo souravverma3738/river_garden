@@ -54,6 +54,7 @@ def hash_password(password: str) -> str:
     """Hash password using bcrypt"""
     return pwd_context.hash(password)
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify plain password against hashed password
@@ -107,6 +108,7 @@ async def lifespan(app: FastAPI):
     yield
 
     print("🛑 FastAPI server shutting down...")
+
 
 app = FastAPI(title="River Garden API", lifespan=lifespan)
 
@@ -169,6 +171,7 @@ def verify_token(token: str, db: Session):
     print(f"✅ [TOKEN] User verified: {user.email}, Role: {user.role}")
     return user
 
+
 # ====================================================
 # 🧩 REGISTER (SIGN UP)
 # ====================================================
@@ -176,6 +179,7 @@ def verify_token(token: str, db: Session):
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     """Return the currently authenticated user."""
     return verify_token(token, db)
+
 
 @app.post("/api/auth/register")
 def register(
@@ -732,14 +736,16 @@ def send_team_reminders(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error sending reminders: {str(e)}"
         )
+
+
 # ====================================================
 # 👑 ADMIN: GET ALL USERS (for Assign/Unassign Supervisor)
 # ====================================================
 
 @app.get("/api/admin/all-users")
 def get_all_users_for_admin(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
 ):
     """
     Return all users in the system (Admin only)
@@ -768,12 +774,14 @@ def get_all_users_for_admin(
         for u in users
     ]
 
+
 @app.post("/api/admin/assign-supervisor")
 def assign_supervisor_api(supervisor_id: int = Form(...), member_id: int = Form(...),
                           db: Session = Depends(get_db)):
     """Admin assigns a supervisor to a team member"""
     assignment = crud.assign_supervisor(db, supervisor_id, member_id)
     return {"message": "Supervisor assigned", "assignment_id": assignment.id}
+
 
 @app.post("/api/admin/unassign-supervisor")
 def unassign_supervisor_api(supervisor_id: int = Form(...), member_id: int = Form(...),
@@ -784,23 +792,229 @@ def unassign_supervisor_api(supervisor_id: int = Form(...), member_id: int = For
         return {"message": "Unassigned successfully"}
     raise HTTPException(status_code=404, detail="Assignment not found")
 
+
 @app.get("/api/supervisor/team")
 def get_supervisor_team(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     """Supervisors view their assigned team"""
     user = verify_token(token, db)
+
+    # Only allow Supervisor role
+    if user.role != "Supervisor":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only Supervisors can access this endpoint"
+        )
+
     team = crud.get_team_for_supervisor(db, user.id)
     return [
-        {"id": m.id, "name": m.name, "email": m.email, "role": m.role, "branch": m.branch}
+        {"id": m.id, "name": m.name, "email": m.email, "role": m.role, "branch": m.branch, "avatar": m.avatar}
         for m in team
     ]
+
+
+@app.get("/api/supervisor/member/{member_id}/enrollments")
+def get_supervisor_member_enrollments(
+        member_id: int,
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    """Get enrollments for a specific member (Supervisor only)"""
+    try:
+        user = verify_token(token, db)
+
+        # Only allow Supervisor role
+        if user.role != "Supervisor":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Supervisors can access this endpoint"
+            )
+
+        # Verify the member is assigned to this supervisor
+        team = crud.get_team_for_supervisor(db, user.id)
+        member_ids = [m.id for m in team]
+
+        if member_id not in member_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This member is not assigned to you"
+            )
+
+        # Get member's enrollments
+        enrollments = db.query(models.Enrollment).filter(
+            models.Enrollment.user_id == member_id
+        ).all()
+
+        enrollments_data = []
+        for e in enrollments:
+            course = db.query(models.Course).filter(models.Course.id == e.course_id).first()
+            enrollments_data.append({
+                "id": e.id,
+                "course_id": e.course_id,
+                "course_title": course.title if course else "Unknown",
+                "course_category": course.category.value if course and hasattr(course.category, 'value') else str(
+                    course.category) if course else "Unknown",
+                "status": e.status.value if hasattr(e.status, 'value') else str(e.status),
+                "progress": e.progress,
+                "score": e.score,
+                "started_date": e.started_date.isoformat() if e.started_date else None,
+                "completed_date": e.completed_date.isoformat() if e.completed_date else None,
+                "due_date": e.due_date.isoformat() if e.due_date else None,
+            })
+
+        return enrollments_data
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [SUPERVISOR] Error fetching member enrollments: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching member enrollments: {str(e)}"
+        )
+
+
+@app.post("/api/supervisor/assign-course")
+def supervisor_assign_course(
+        member_id: int = Form(...),
+        course_id: int = Form(...),
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    """Supervisor assigns a course to their team member"""
+    try:
+        user = verify_token(token, db)
+
+        # Only allow Supervisor role
+        if user.role != "Supervisor":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Supervisors can assign courses"
+            )
+
+        # Verify the member is assigned to this supervisor
+        team = crud.get_team_for_supervisor(db, user.id)
+        member_ids = [m.id for m in team]
+
+        if member_id not in member_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This member is not assigned to you"
+            )
+
+        # Check if member exists
+        member = db.query(models.User).filter(models.User.id == member_id).first()
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Team member not found"
+            )
+
+        # Check if course exists
+        course = db.query(models.Course).filter(models.Course.id == course_id).first()
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+
+        # Check if already enrolled
+        existing = db.query(models.Enrollment).filter(
+            models.Enrollment.user_id == member_id,
+            models.Enrollment.course_id == course_id
+        ).first()
+
+        if existing:
+            return {"message": "Member already enrolled in this course", "enrollment_id": existing.id}
+
+        # Create enrollment
+        enrollment = models.Enrollment(
+            user_id=member_id,
+            course_id=course_id,
+            status=models.EnrollmentStatus.NOT_STARTED,
+            assigned_by=user.id,
+            due_date=datetime.utcnow() + timedelta(days=course.expiry_days)
+        )
+
+        db.add(enrollment)
+        db.commit()
+        db.refresh(enrollment)
+
+        print(f"✅ [SUPERVISOR] Course {course_id} assigned to member {member_id}")
+        return {"message": "Course assigned successfully", "enrollment_id": enrollment.id}
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [SUPERVISOR] Error assigning course: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error assigning course: {str(e)}"
+        )
+
+
+@app.post("/api/supervisor/remove-course")
+def supervisor_remove_course(
+        enrollment_id: int = Form(...),
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    """Supervisor removes a course from their team member"""
+    try:
+        user = verify_token(token, db)
+
+        # Only allow Supervisor role
+        if user.role != "Supervisor":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Supervisors can remove courses"
+            )
+
+        # Get enrollment
+        enrollment = db.query(models.Enrollment).filter(
+            models.Enrollment.id == enrollment_id
+        ).first()
+
+        if not enrollment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Enrollment not found"
+            )
+
+        # Verify the member is assigned to this supervisor
+        team = crud.get_team_for_supervisor(db, user.id)
+        member_ids = [m.id for m in team]
+
+        if enrollment.user_id not in member_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This member is not assigned to you"
+            )
+
+        # Delete enrollment
+        db.delete(enrollment)
+        db.commit()
+
+        print(f"✅ [SUPERVISOR] Enrollment {enrollment_id} removed")
+        return {"message": "Course removed successfully"}
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [SUPERVISOR] Error removing course: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error removing course: {str(e)}"
+        )
+
+
 # ====================================================
 # 📚 USER ENROLLMENTS
 # ====================================================
 
 @app.get("/api/enrollments")
 def get_my_enrollments(
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
     """Return all enrollments for the logged-in user."""
     enrollments = db.query(models.Enrollment).filter(
@@ -811,9 +1025,9 @@ def get_my_enrollments(
 
 @app.post("/api/enrollments/enroll")
 def enroll_in_course(
-    course_id: int = Form(...),
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+        course_id: int = Form(...),
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
     """Enroll the current user in a course (if not already)."""
     course = db.query(models.Course).filter(models.Course.id == course_id).first()
@@ -843,12 +1057,13 @@ def enroll_in_course(
     db.refresh(enrollment)
     return {"message": "Enrolled successfully", "enrollment_id": enrollment.id}
 
+
 @app.post("/api/enrollments/{course_id}/progress")
 def update_progress(
-    course_id: int,
-    payload: dict = Body(...),
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+        course_id: int,
+        payload: dict = Body(...),
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
     """
     Update progress for a course.
@@ -901,9 +1116,9 @@ def update_progress(
 
 @app.post("/api/enrollments/{course_id}/complete")
 def mark_course_complete(
-    course_id: int,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+        course_id: int,
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
     """Force-complete a course and create certificate (if needed)."""
     enrollment = db.query(models.Enrollment).filter(
@@ -940,14 +1155,16 @@ def mark_course_complete(
 
     db.commit()
     return {"message": "Course marked complete"}
+
+
 # ====================================================
 # 🎓 USER CERTIFICATES
 # ====================================================
 
 @app.get("/api/certificates/me")
 def get_my_certificates(
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
     certificates = db.query(models.Certificate).filter(
         models.Certificate.user_id == current_user.id
@@ -962,14 +1179,16 @@ def get_my_certificates(
         result.append(item)
 
     return result
+
+
 # ====================================================
 # 📊 USER STATS & COMPLIANCE
 # ====================================================
 
 @app.get("/api/stats/me")
 def get_user_stats(
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
     enrollments = db.query(models.Enrollment).filter(
         models.Enrollment.user_id == current_user.id
@@ -1002,8 +1221,8 @@ def get_user_stats(
 
 @app.get("/api/stats/compliance-trend")
 def get_compliance_trend(
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
     """
     Simple 6-month trend. For now we just generate dummy data based
@@ -1022,6 +1241,7 @@ def get_compliance_trend(
         data.append(ComplianceData(month=month, rate=round(rate, 1)))
 
     return data
+
 
 # ====================================================
 # ✅ ROOT CHECK

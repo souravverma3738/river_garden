@@ -384,3 +384,87 @@ export const adminAPI = {
     return res.json();
   },
 };
+
+// ====================================================
+// 👨‍💼 SUPERVISOR API
+// ====================================================
+export const supervisorAPI = {
+  // Get supervisor's assigned team members
+  getMyTeam: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/supervisor/team`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch team");
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching supervisor team:", error);
+      return [];
+    }
+  },
+
+  // Get member's enrollments with progress
+  getMemberEnrollments: async (memberId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/supervisor/member/${memberId}/enrollments`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch member enrollments");
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching member enrollments:", error);
+      return [];
+    }
+  },
+
+  // Assign course to team member
+  assignCourse: async (memberId, courseId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/supervisor/assign-course`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${getToken()}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          member_id: memberId,
+          course_id: courseId,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || "Failed to assign course");
+      }
+      return await res.json();
+    } catch (error) {
+      console.error("Error assigning course:", error);
+      throw error;
+    }
+  },
+
+  // Remove course from team member
+  removeCourse: async (enrollmentId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/supervisor/remove-course`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${getToken()}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          enrollment_id: enrollmentId,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || "Failed to remove course");
+      }
+      return await res.json();
+    } catch (error) {
+      console.error("Error removing course:", error);
+      throw error;
+    }
+  },
+};
