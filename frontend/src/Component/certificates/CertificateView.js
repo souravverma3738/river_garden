@@ -20,6 +20,37 @@ export const CertificateView = ({ certificate }) => {
     return <Badge variant="success">Valid</Badge>;
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const API_BASE = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_BASE}/api/certificates/${certificate.id}/download`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to download certificate");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificate_${certificate.certificate_id || certificate.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading certificate:", error);
+      alert("Failed to download certificate. Please try again.");
+    }
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300">
       <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-8">
@@ -48,7 +79,7 @@ export const CertificateView = ({ certificate }) => {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Certificate ID</p>
-                <p className="font-mono font-medium">{certificate.id}</p>
+                <p className="font-mono font-medium">{certificate.certificate_id || certificate.id}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Score</p>
@@ -56,21 +87,17 @@ export const CertificateView = ({ certificate }) => {
               </div>
               <div>
                 <p className="text-muted-foreground">Issue Date</p>
-                <p className="font-medium">{formatDate(certificate.issueDate)}</p>
+                <p className="font-medium">{formatDate(certificate.issue_date || certificate.issueDate)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Expiry Date</p>
-                <p className="font-medium">{formatDate(certificate.expiryDate)}</p>
+                <p className="font-medium">{formatDate(certificate.expiry_date || certificate.expiryDate)}</p>
               </div>
             </div>
 
-            {/* QR Code */}
-            <div className="flex items-center justify-between border-t pt-4">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Scan to verify</p>
-                <img src={certificate.qrCode} alt="QR Code" className="h-20 w-20" />
-              </div>
-              <Button variant="outline" size="sm">
+            {/* Download Button */}
+            <div className="flex items-center justify-end border-t pt-4">
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>

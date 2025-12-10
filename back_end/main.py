@@ -322,7 +322,7 @@ def login(
 
 
 # ====================================================
-# 📚 GET COURSES FILTERED BY USER ROLE
+# 📚 GET COURSES FILTERED BY USER ROLE + ENROLLMENTS
 # ====================================================
 
 @app.get("/api/courses")
@@ -331,14 +331,12 @@ def get_courses(
         db: Session = Depends(get_db)
 ):
     """
-    Get courses assigned to the user's role
-    - Carers see: Safeguarding, Infection Control, Fire Safety, Moving & Handling, Medication, etc.
-    - Nurses see: All + Clinical Skills
-    - Team Leaders see: Supervision, Incident Reporting, etc.
-    - Admins see: All courses
+    Get courses assigned to the user's role + courses specifically assigned via enrollment
+    - Returns courses where user's role is in assigned_roles
+    - PLUS courses where user has an enrollment (supervisor-assigned)
     """
     try:
-        print("📚 [COURSES] Fetching courses for user role...")
+        print("📚 [COURSES] Fetching courses for user...")
 
         user = verify_token(token, db)
         print(f"✅ [COURSES] User verified: {user.email}, Role: {user.role}")
@@ -347,17 +345,27 @@ def get_courses(
         all_courses = db.query(models.Course).all()
         print(f"📚 [COURSES] Total courses in database: {len(all_courses)}")
 
-        # Filter courses by user's role
-        user_courses = []
-        for course in all_courses:
-            # Check if user's role is in assigned_roles
-            if user.role in course.assigned_roles:
-                user_courses.append(course)
-                print(f"✅ [COURSES] Adding course '{course.title}' for role {user.role}")
-            else:
-                print(f"⏭️  [COURSES] Skipping course '{course.title}' (not assigned to {user.role})")
+        # Get user's enrollments to find specifically assigned courses
+        user_enrollments = db.query(models.Enrollment).filter(
+            models.Enrollment.user_id == user.id
+        ).all()
+        enrolled_course_ids = [e.course_id for e in user_enrollments]
+        print(f"📚 [COURSES] User has {len(enrolled_course_ids)} enrollments")
 
-        print(f"✅ [COURSES] User has {len(user_courses)} assigned courses")
+        # Filter courses: role-based OR specifically enrolled
+        user_courses = []
+        seen_ids = set()
+
+        for course in all_courses:
+            # Check if user's role is in assigned_roles OR user is enrolled
+            if user.role in course.assigned_roles or course.id in enrolled_course_ids:
+                if course.id not in seen_ids:  # Avoid duplicates
+                    user_courses.append(course)
+                    seen_ids.add(course.id)
+                    reason = "role-based" if user.role in course.assigned_roles else "enrolled"
+                    print(f"✅ [COURSES] Adding course '{course.title}' ({reason})")
+
+        print(f"✅ [COURSES] User has {len(user_courses)} total courses")
 
         # Convert to dict for JSON response
         courses_data = [
@@ -1007,6 +1015,60 @@ def supervisor_remove_course(
         )
 
 
+@app.get("/api/supervisor/stats")
+def get_supervisor_stats(
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    """Get statistics for supervisor's team"""
+    try:
+        user = verify_token(token, db)
+
+        # Only allow Supervisor role
+        if user.role != "Supervisor":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Supervisors can access this endpoint"
+            )
+
+        # Get team members
+        team = crud.get_team_for_supervisor(db, user.id)
+        team_member_ids = [m.id for m in team]
+
+        # Get all enrollments for team members
+        all_enrollments = db.query(models.Enrollment).filter(
+            models.Enrollment.user_id.in_(team_member_ids)
+        ).all()
+
+        # Calculate statistics
+        total_enrollments = len(all_enrollments)
+        active_courses = len([e for e in all_enrollments if e.status == models.EnrollmentStatus.IN_PROGRESS])
+        completed_courses = len([e for e in all_enrollments if e.status == models.EnrollmentStatus.COMPLETED])
+
+        # Calculate completion rate
+        completion_rate = round((completed_courses / total_enrollments * 100), 1) if total_enrollments > 0 else 0.0
+
+        stats = {
+            "team_size": len(team),
+            "active_courses": active_courses,
+            "completion_rate": completion_rate,
+            "total_enrollments": total_enrollments,
+            "completed_courses": completed_courses
+        }
+
+        print(f"✅ [SUPERVISOR] Stats calculated: {stats}")
+        return stats
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [SUPERVISOR] Error fetching stats: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching stats: {str(e)}"
+        )
+
+
 # ====================================================
 # 📚 USER ENROLLMENTS
 # ====================================================
@@ -1241,6 +1303,206 @@ def get_compliance_trend(
         data.append(ComplianceData(month=month, rate=round(rate, 1)))
 
     return data
+
+
+# ====================================================
+# 🔔 NOTIFICATION ENDPOINTS
+# ====================================================
+
+@app.get("/api/notifications/me")
+def get_my_notifications(
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """Get all notifications for the current user"""
+    try:
+        notifications = db.query(models.Notification).filter(
+            models.Notification.user_id == current_user.id
+        ).order_by(models.Notification.created_at.desc()).all()
+
+        return [
+            {
+                "id": n.id,
+                "title": n.title,
+                "message": n.message,
+                "type": n.type,
+                "read": n.read,
+                "created_at": n.created_at.isoformat()
+            }
+            for n in notifications
+        ]
+    except Exception as e:
+        print(f"❌ [NOTIFICATIONS] Error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching notifications: {str(e)}"
+        )
+
+
+@app.post("/api/notifications/{notification_id}/mark-read")
+def mark_notification_read(
+        notification_id: int,
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """Mark a notification as read"""
+    try:
+        notification = db.query(models.Notification).filter(
+            models.Notification.id == notification_id,
+            models.Notification.user_id == current_user.id
+        ).first()
+
+        if not notification:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found"
+            )
+
+        notification.read = True
+        db.commit()
+
+        return {"message": "Notification marked as read"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [NOTIFICATIONS] Error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error marking notification as read: {str(e)}"
+        )
+
+
+# ====================================================
+# 📄 CERTIFICATE PDF DOWNLOAD
+# ====================================================
+
+@app.get("/api/certificates/{certificate_id}/download")
+def download_certificate_pdf(
+        certificate_id: int,
+        current_user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """Generate and download certificate as PDF"""
+    from fastapi.responses import Response
+    from io import BytesIO
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.units import inch
+    from reportlab.pdfgen import canvas
+    from reportlab.lib import colors
+
+    try:
+        # Get certificate
+        certificate = db.query(models.Certificate).filter(
+            models.Certificate.id == certificate_id,
+            models.Certificate.user_id == current_user.id
+        ).first()
+
+        if not certificate:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Certificate not found"
+            )
+
+        # Get course and user details
+        course = certificate.course
+        user = certificate.user
+
+        # Create PDF in memory
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+
+        # Set up fonts and styling
+        pdf.setTitle(f"Certificate - {course.title}")
+
+        # Draw border
+        pdf.setStrokeColor(colors.HexColor("#1e40af"))
+        pdf.setLineWidth(3)
+        pdf.rect(0.5 * inch, 0.5 * inch, width - 1 * inch, height - 1 * inch)
+
+        # Title
+        pdf.setFont("Helvetica-Bold", 32)
+        pdf.setFillColor(colors.HexColor("#1e40af"))
+        pdf.drawCentredString(width / 2, height - 2 * inch, "Certificate of Completion")
+
+        # Decorative line
+        pdf.setStrokeColor(colors.HexColor("#3b82f6"))
+        pdf.setLineWidth(2)
+        pdf.line(2 * inch, height - 2.5 * inch, width - 2 * inch, height - 2.5 * inch)
+
+        # Body text
+        pdf.setFont("Helvetica", 16)
+        pdf.setFillColor(colors.black)
+        pdf.drawCentredString(width / 2, height - 3.2 * inch, "This certifies that")
+
+        # User name (larger)
+        pdf.setFont("Helvetica-Bold", 24)
+        pdf.setFillColor(colors.HexColor("#1e40af"))
+        pdf.drawCentredString(width / 2, height - 4 * inch, user.name)
+
+        # Completion text
+        pdf.setFont("Helvetica", 16)
+        pdf.setFillColor(colors.black)
+        pdf.drawCentredString(width / 2, height - 4.7 * inch, "has successfully completed")
+
+        # Course title
+        pdf.setFont("Helvetica-Bold", 20)
+        pdf.setFillColor(colors.HexColor("#1e40af"))
+        pdf.drawCentredString(width / 2, height - 5.5 * inch, course.title)
+
+        # Certificate details (left aligned)
+        pdf.setFont("Helvetica", 12)
+        pdf.setFillColor(colors.black)
+        y_position = height - 7 * inch
+
+        details = [
+            f"Certificate ID: {certificate.certificate_id}",
+            f"Issue Date: {certificate.issue_date.strftime('%B %d, %Y')}",
+            f"Expiry Date: {certificate.expiry_date.strftime('%B %d, %Y')}",
+            f"Score: {certificate.score}%"
+        ]
+
+        for detail in details:
+            pdf.drawCentredString(width / 2, y_position, detail)
+            y_position -= 0.3 * inch
+
+        # Footer
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.setFillColor(colors.HexColor("#1e40af"))
+        pdf.drawCentredString(width / 2, 1.5 * inch, "River Garden Training")
+
+        pdf.setFont("Helvetica", 10)
+        pdf.setFillColor(colors.gray)
+        pdf.drawCentredString(width / 2, 1.2 * inch, "Professional Healthcare Training & Compliance")
+
+        # Finalize PDF
+        pdf.showPage()
+        pdf.save()
+
+        # Get PDF content
+        buffer.seek(0)
+        pdf_content = buffer.getvalue()
+        buffer.close()
+
+        # Return PDF
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=certificate_{certificate.certificate_id}.pdf"
+            }
+        )
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [CERTIFICATE] Error generating PDF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating certificate: {str(e)}"
+        )
 
 
 # ====================================================

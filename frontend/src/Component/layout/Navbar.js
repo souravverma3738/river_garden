@@ -1,15 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Bell, User, LogOut, BookOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { NotificationPanel } from './NotificationPanel';
+import { notificationAPI } from '../../services/api';
 
 export const Navbar = ({ user, onLogout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const isLandingPage = location.pathname === '/' || location.pathname === '/home';
+
+  useEffect(() => {
+    if (user) {
+      loadUnreadCount();
+      // Refresh count every 30 seconds
+      const interval = setInterval(loadUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const loadUnreadCount = async () => {
+    try {
+      const notifications = await notificationAPI.getMyNotifications();
+      const unread = notifications.filter(n => !n.read).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error('Error loading notification count:', error);
+    }
+  };
+
+  const handleNotificationClick = () => {
+    setNotificationPanelOpen(!notificationPanelOpen);
+    if (!notificationPanelOpen) {
+      loadUnreadCount(); // Refresh when opening
+    }
+  };
 
   const navigation = isLandingPage ? [
     { name: 'Features', href: '#features' },
@@ -54,11 +84,19 @@ export const Navbar = ({ user, onLogout }) => {
             {user ? (
               <>
                 {/* Notification Bell */}
-                <Button variant="ghost" size="icon" className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  onClick={handleNotificationClick}
+                  data-testid="notification-button"
+                >
                   <Bell className="h-5 w-5" />
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] text-white">
-                    3
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </Button>
 
                 {/* User Menu */}
@@ -138,6 +176,12 @@ export const Navbar = ({ user, onLogout }) => {
           </div>
         </div>
       )}
+
+      {/* Notification Panel */}
+      <NotificationPanel
+        isOpen={notificationPanelOpen}
+        onClose={() => setNotificationPanelOpen(false)}
+      />
     </nav>
   );
 };

@@ -467,4 +467,55 @@ export const supervisorAPI = {
       throw error;
     }
   },
+
+  // Get supervisor team statistics
+  getStats: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/supervisor/stats`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching supervisor stats:", error);
+      return { active_courses: 0, completion_rate: 0 };
+    }
+  },
+};
+
+// ====================================================
+// 🔔 NOTIFICATION API
+// ====================================================
+
+export const notificationAPI = {
+  // Get user notifications
+  getMyNotifications: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/me`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch notifications");
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      return [];
+    }
+  },
+
+  // Mark notification as read
+  markAsRead: async (notificationId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/${notificationId}/mark-read`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to mark notification as read");
+      return await res.json();
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      return null;
+    }
+  },
 };

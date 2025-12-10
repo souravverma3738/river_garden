@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 export const SupervisorDashboard = () => {
   const [teamMembers, setTeamMembers] = useState([]);
+  const [stats, setStats] = useState({ active_courses: 0, completion_rate: 0 });
   const [loading, setLoading] = useState(true);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
@@ -23,8 +24,12 @@ export const SupervisorDashboard = () => {
   const loadTeamData = async () => {
     try {
       setLoading(true);
-      const members = await supervisorAPI.getMyTeam();
+      const [members, statsData] = await Promise.all([
+        supervisorAPI.getMyTeam(),
+        supervisorAPI.getStats()
+      ]);
       setTeamMembers(members);
+      setStats(statsData || { active_courses: 0, completion_rate: 0 });
     } catch (error) {
       console.error('Error loading team data:', error);
       showToast('Failed to load team data', 'error');
@@ -98,7 +103,7 @@ export const SupervisorDashboard = () => {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
+            <div className="text-2xl font-bold">{stats.active_courses || 0}</div>
             <p className="text-xs text-muted-foreground">Courses in progress</p>
           </CardContent>
         </Card>
@@ -109,7 +114,7 @@ export const SupervisorDashboard = () => {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
+            <div className="text-2xl font-bold">{stats.completion_rate || 0}%</div>
             <p className="text-xs text-muted-foreground">Overall team progress</p>
           </CardContent>
         </Card>
