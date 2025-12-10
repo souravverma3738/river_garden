@@ -30,11 +30,11 @@ export const AssignSupervisor = () => {
       }));
 
       const supervisors = normalized.filter(u =>
-        ['team leader', 'care manager'].includes(u.role)
+        ['Supervisor', 'supervisor'].includes(u.role)
       );
 
       const members = normalized.filter(
-        u => !['team leader', 'care manager', 'admin'].includes(u.role)
+        u => !['Supervisor', 'supervisor', 'admin'].includes(u.role)
       );
 
       console.log('🧑‍💼 Supervisors:', supervisors);

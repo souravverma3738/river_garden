@@ -369,6 +369,9 @@ def get_courses(
                 "expiry_days": c.expiry_days,
                 "assigned_roles": c.assigned_roles,
                 "video_url": c.video_url,
+                "delivery_type": c.delivery_type.value if hasattr(c.delivery_type, 'value') else str(c.delivery_type),
+                "meeting_url": c.meeting_url,
+                "meeting_platform": c.meeting_platform,
             }
             for c in user_courses
         ]

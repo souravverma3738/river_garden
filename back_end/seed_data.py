@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Course, CourseCategory, CourseDifficulty
-from datetime import datetime
+from models import Course, CourseCategory, CourseDifficulty, CourseDeliveryType
 
 
 def seed_courses(db: Session):
@@ -9,11 +8,10 @@ def seed_courses(db: Session):
         print("✅ Courses already exist – skipping seed.")
         return
 
-    # Define which roles should have access to each course
     courses_data = [
 
         # ============================
-        # 🔵 ALL STAFF (12 months)
+        # 🔵 ALL STAFF
         # ============================
         {
             "title": "Safeguarding Adults",
@@ -23,9 +21,12 @@ def seed_courses(db: Session):
             "description": "Protecting vulnerable adults from abuse, harm or neglect.",
             "modules": 5,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1584438784894-089d6a62b8d5?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
+            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver","Admin"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
         {
             "title": "GDPR & Data Protection",
@@ -35,9 +36,12 @@ def seed_courses(db: Session):
             "description": "Understanding GDPR, confidentiality and secure data handling.",
             "modules": 4,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
+            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver","Admin"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
 
         {
@@ -48,10 +52,14 @@ def seed_courses(db: Session):
             "description": "Recognising fire risks, using extinguishers and emergency evacuation.",
             "modules": 3,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1598387993411-5d5a06d0c7cc?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
+            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver","Admin"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Infection Control",
             "category": CourseCategory.MANDATORY,
@@ -60,10 +68,14 @@ def seed_courses(db: Session):
             "description": "PPE use, hand hygiene, preventing infection spread.",
             "modules": 4,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1580983557125-27b3b36e5a2e?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1584744982491-665216d95f8b?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
+            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver","Admin"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Health & Safety Awareness",
             "category": CourseCategory.MANDATORY,
@@ -72,10 +84,14 @@ def seed_courses(db: Session):
             "description": "Workplace safety, hazard reporting and risk prevention.",
             "modules": 4,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1556911220-e15b29be8c83?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
+            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver","Admin"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Complaints Handling",
             "category": CourseCategory.MANDATORY,
@@ -84,13 +100,16 @@ def seed_courses(db: Session):
             "description": "Responding to complaints professionally and following procedures.",
             "modules": 3,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1605902711622-cfb43c44367d?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1553484771-371a605b060b?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver"],
+            "assigned_roles": ["Carer", "Office Staff", "Nurse", "Supervisor", "Driver","Admin"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
 
         # ============================
-        # 🟢 CARERS (12 months)
+        # 🟢 CARERS
         # ============================
         {
             "title": "Moving & Handling",
@@ -100,10 +119,14 @@ def seed_courses(db: Session):
             "description": "Safe techniques for moving clients and using equipment.",
             "modules": 5,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
             "assigned_roles": ["Carer"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Medication Awareness",
             "category": CourseCategory.MANDATORY,
@@ -112,10 +135,14 @@ def seed_courses(db: Session):
             "description": "Understanding medication types, refusals and documentation.",
             "modules": 4,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1580281658624-7f6f729bb1c7?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
             "assigned_roles": ["Carer"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Food Hygiene",
             "category": CourseCategory.MANDATORY,
@@ -124,10 +151,14 @@ def seed_courses(db: Session):
             "description": "Preventing contamination, safe food preparation and storage.",
             "modules": 3,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
             "assigned_roles": ["Carer"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Lone Working",
             "category": CourseCategory.MANDATORY,
@@ -136,13 +167,16 @@ def seed_courses(db: Session):
             "description": "Staying safe when working alone in the community.",
             "modules": 3,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1521790361543-f645cf042ec4?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
             "assigned_roles": ["Carer", "Driver"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
 
         # ============================
-        # 🟣 NURSES (6 months)
+        # 🟣 NURSES
         # ============================
         {
             "title": "Clinical Skills",
@@ -152,10 +186,14 @@ def seed_courses(db: Session):
             "description": "Advanced assessments, vitals monitoring and clinical judgement.",
             "modules": 8,
             "expiry_days": 180,
-            "thumbnail": "https://images.unsplash.com/photo-1580281658624-7f6f729bb1c7?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
             "assigned_roles": ["Nurse"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Medication Administration",
             "category": CourseCategory.SPECIALIST,
@@ -164,10 +202,14 @@ def seed_courses(db: Session):
             "description": "Safe medication delivery and MAR chart accuracy.",
             "modules": 5,
             "expiry_days": 180,
-            "thumbnail": "https://images.unsplash.com/photo-1580281656219-ee3e6db031ff?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
             "assigned_roles": ["Nurse"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
+
         {
             "title": "Pressure Care",
             "category": CourseCategory.SPECIALIST,
@@ -176,9 +218,12 @@ def seed_courses(db: Session):
             "description": "Identifying pressure ulcers and implementing prevention plans.",
             "modules": 4,
             "expiry_days": 180,
-            "thumbnail": "https://images.unsplash.com/photo-1580281658940-e418f3802c30?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
             "assigned_roles": ["Nurse"],
+            "delivery_type": CourseDeliveryType.VIDEO,
+            "meeting_url": None,
+            "meeting_platform": None,
         },
 
         # ============================
@@ -232,7 +277,7 @@ def seed_courses(db: Session):
             "description": "Basic first aid response including CPR awareness.",
             "modules": 4,
             "expiry_days": 365,
-            "thumbnail": "https://images.unsplash.com/photo-1576765975876-8c9c0a4a79e4?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
             "assigned_roles": ["Driver"],
         },
@@ -260,7 +305,7 @@ def seed_courses(db: Session):
             "description": "Maintaining privacy for clients, staff and company data.",
             "modules": 3,
             "expiry_days": 730,
-            "thumbnail": "https://images.unsplash.com/photo-1515169067865-5387d99f67a6?w=400",
+            "thumbnail": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
             "assigned_roles": ["Office Staff"],
         },
@@ -328,10 +373,61 @@ def seed_courses(db: Session):
             "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
             "assigned_roles": ["Carer", "Nurse"],
         },
+        # ============================
+        # LIVE SESSION EXAMPLES
+        # ============================
+        {
+            "title": "Live Q&A: Dementia Care Best Practices",
+            "category": CourseCategory.SPECIALIST,
+            "duration": "60 mins",
+            "difficulty": CourseDifficulty.INTERMEDIATE,
+            "description": "Join our expert-led live session on dementia care. Interactive Q&A included.",
+            "modules": 1,
+            "expiry_days": 365,
+            "thumbnail": "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80",
+            "video_url": None,
+            "assigned_roles": ["Carer", "Nurse", "Supervisor"],
+            "delivery_type": CourseDeliveryType.LIVE_SESSION,
+            "meeting_url": "https://zoom.us/j/1234567890",
+            "meeting_platform": "Zoom",
+        },
+
+        {
+            "title": "Team Leadership Workshop",
+            "category": CourseCategory.ADVANCED,
+            "duration": "90 mins",
+            "difficulty": CourseDifficulty.ADVANCED,
+            "description": "Interactive workshop on effective team leadership and communication strategies.",
+            "modules": 1,
+            "expiry_days": 365,
+            "thumbnail": "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80",
+            "video_url": None,
+            "assigned_roles": ["Supervisor"],
+            "delivery_type": CourseDeliveryType.LIVE_SESSION,
+            "meeting_url": "https://meet.google.com/abc-defg-hij",
+            "meeting_platform": "Google Meet",
+        },
+
+        {
+            "title": "Mental Health First Aid Training",
+            "category": CourseCategory.SPECIALIST,
+            "duration": "120 mins",
+            "difficulty": CourseDifficulty.ADVANCED,
+            "description": "Comprehensive live training on mental health support and crisis intervention.",
+            "modules": 1,
+            "expiry_days": 365,
+            "thumbnail": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=800&q=80",
+            "video_url": None,
+            "assigned_roles": ["Carer", "Nurse", "Supervisor"],
+            "delivery_type": CourseDeliveryType.LIVE_SESSION,
+            "meeting_url": "https://teams.microsoft.com/l/meetup-join/example",
+            "meeting_platform": "Microsoft Teams",
+        },
     ]
+
     for data in courses_data:
         course = Course(**data)
         db.add(course)
 
     db.commit()
-    print(f"✅ Seeded {len(courses_data)} courses with role-based assignments successfully!")
+    print(f"✅ Seeded {len(courses_data)} courses with verified working images and role assignments!")

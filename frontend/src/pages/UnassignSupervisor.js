@@ -21,8 +21,8 @@ export const UnassignSupervisor = () => {
   const loadUsers = async () => {
     try {
       const allMembers = await adminAPI.getAllUsers();
-      const sups = allMembers.filter(m => ['Team Leader', 'Care Manager'].includes(m.role));
-      const team = allMembers.filter(m => !['Team Leader', 'Care Manager', 'Admin'].includes(m.role));
+      const sups = allMembers.filter(m => ['Supervisor', 'supervisor'].includes(m.role));
+      const team = allMembers.filter(m => !['Supervisor', 'supervisor', 'Admin'].includes(m.role));
       setSupervisors(sups);
       setMembers(team);
     } catch (err) {

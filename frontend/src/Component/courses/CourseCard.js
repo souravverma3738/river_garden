@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Award, TrendingUp } from 'lucide-react';
+import { Clock, Award, TrendingUp, Video, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -43,8 +43,20 @@ export const CourseCard = ({ course, enrollment, onStart, showProgress = false }
           alt={course.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
           {getStatusBadge()}
+          {/* Delivery Type Badge */}
+          {course.delivery_type === 'live_session' ? (
+            <Badge className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1">
+              <ExternalLink className="h-3 w-3" />
+              Live Session
+            </Badge>
+          ) : (
+            <Badge className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1">
+              <Video className="h-3 w-3" />
+              Video Course
+            </Badge>
+          )}
         </div>
         <div className="absolute top-3 left-3">
           <Badge variant="secondary">{course.category}</Badge>
@@ -94,8 +106,8 @@ export const CourseCard = ({ course, enrollment, onStart, showProgress = false }
           {enrollment?.status === 'completed'
             ? 'View Certificate'
             : enrollment?.status === 'in-progress'
-            ? 'Continue Learning'
-            : 'Start Course'}
+            ? course.delivery_type === 'live_session' ? 'Join Session' : 'Continue Learning'
+            : course.delivery_type === 'live_session' ? 'Join Live Session' : 'Start Course'}
         </Button>
       </CardFooter>
     </Card>

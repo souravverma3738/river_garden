@@ -27,6 +27,11 @@ class CourseDifficulty(str, enum.Enum):
     ADVANCED = "Advanced"
 
 
+class CourseDeliveryType(str, enum.Enum):
+    VIDEO = "video"
+    LIVE_SESSION = "live_session"
+
+
 class EnrollmentStatus(str, enum.Enum):
     NOT_STARTED = "not-started"
     IN_PROGRESS = "in-progress"
@@ -84,6 +89,11 @@ class Course(Base):
 
     # NEW: Store which roles this course is assigned to
     assigned_roles = Column(ARRAY(String), default=[], nullable=False)  # e.g., ["Carer", "Support Worker", "Nurse"]
+
+    # NEW: Course delivery type and meeting URL
+    delivery_type = Column(SQLEnum(CourseDeliveryType), default=CourseDeliveryType.VIDEO, nullable=False)
+    meeting_url = Column(String, nullable=True)  # For Zoom, Google Meet, Teams links
+    meeting_platform = Column(String, nullable=True)  # e.g., "Zoom", "Google Meet", "Microsoft Teams"
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
