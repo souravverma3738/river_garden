@@ -70,7 +70,7 @@ const Login = ({ onLogin }) => {
 
     console.log('🔵 [SIGNUP] Sending request...');
 
-    const res = await fetch('http://127.0.0.1:8000/api/auth/register', {
+    const res = await fetch('https://river-backend-3.onrender.com/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -124,9 +124,9 @@ const Login = ({ onLogin }) => {
         password: credentials.password,
       });
 
-      console.log('🔵 [LOGIN] Sending request to: http://127.0.0.1:8000/api/auth/login');
+      console.log('🔵 [LOGIN] Sending request to: https://river-backend-3.onrender.com/api/auth/login');
 
-      const res = await fetch('http://127.0.0.1:8000/api/auth/login', {
+      const res = await fetch('https://river-backend-3.onrender.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
