@@ -8,6 +8,8 @@ import { Courses } from './pages/Courses';
 import { Certificates } from './pages/Certificates';
 import { TeamDashboard } from './pages/TeamDashboard';
 import { SupervisorDashboard } from './pages/SupervisorDashboard';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { BulkCourseAssignment } from './pages/BulkCourseAssignment';
 import { Button } from './Component/ui/button';
 import { Input } from './Component/ui/input';
 import { Label } from './Component/ui/label';
@@ -414,7 +416,9 @@ function App() {
               element={
                 currentUser ? (
                   <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                    {currentUser.role === 'Supervisor' ? (
+                    {currentUser.role === 'Admin' ? (
+                      <AdminDashboard />
+                    ) : currentUser.role === 'Supervisor' ? (
                       <SupervisorDashboard />
                     ) : currentUser.role === 'Team Leader' || currentUser.role === 'Care Manager' ? (
                       <TeamDashboard />
@@ -483,6 +487,19 @@ function App() {
                 currentUser && currentUser.role === 'Admin' ? (
                   <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
                     <UnassignSupervisor />
+                  </div>
+                ) : (
+                  <Navigate to="/dashboard" replace />
+                )
+              }
+            />
+
+            <Route
+              path="/admin/bulk-assign"
+              element={
+                currentUser && currentUser.role === 'Admin' ? (
+                  <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                    <BulkCourseAssignment />
                   </div>
                 ) : (
                   <Navigate to="/dashboard" replace />

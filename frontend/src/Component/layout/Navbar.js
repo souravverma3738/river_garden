@@ -154,6 +154,23 @@ export const Navbar = ({ user, onLogout }) => {
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
+
+                    {/* Admin Menu Items */}
+                    {user.role === 'Admin' && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => navigate('/admin/bulk-assign')}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          <span>Bulk Assign Courses</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/admin/assign')}>
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Manage Supervisors</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={onLogout}>
                       <LogOut className="mr-2 h-4 w-4" />

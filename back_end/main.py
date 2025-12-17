@@ -289,6 +289,11 @@ def login(
 
         print(f"✅ [LOGIN] Password verified for: {email}")
 
+        # ✅ Update last login time
+        db_user.last_login = datetime.utcnow()
+        db.commit()
+        print(f"✅ [LOGIN] Last login time updated")
+
         # ✅ Create access token
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
@@ -1066,6 +1071,259 @@ def get_supervisor_stats(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching stats: {str(e)}"
+        )
+
+
+# ====================================================
+# 👑 ADMIN: BULK COURSE ASSIGNMENT
+# ====================================================
+
+@app.post("/api/admin/assign-course-bulk")
+def admin_bulk_assign_course(
+        course_id: int = Form(...),
+        user_ids: str = Form(...),  # Comma-separated user IDs
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    """
+    Admin assigns a course to multiple users at once
+    user_ids: comma-separated string like "1,2,3,5,7"
+    """
+    try:
+        user = verify_token(token, db)
+
+        # Only allow Admin
+        if user.role != "Admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Admins can bulk assign courses"
+            )
+
+        # Parse user IDs
+        user_id_list = [int(uid.strip()) for uid in user_ids.split(",") if uid.strip()]
+
+        if not user_id_list:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No user IDs provided"
+            )
+
+        # Check if course exists
+        course = db.query(models.Course).filter(models.Course.id == course_id).first()
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+
+        # Assign course to each user
+        enrolled_count = 0
+        skipped_count = 0
+
+        for uid in user_id_list:
+            # Check if user exists
+            target_user = db.query(models.User).filter(models.User.id == uid).first()
+            if not target_user:
+                skipped_count += 1
+                continue
+
+            # Check if already enrolled
+            existing = db.query(models.Enrollment).filter(
+                models.Enrollment.user_id == uid,
+                models.Enrollment.course_id == course_id
+            ).first()
+
+            if existing:
+                skipped_count += 1
+                continue
+
+            # Create enrollment
+            enrollment = models.Enrollment(
+                user_id=uid,
+                course_id=course_id,
+                status=models.EnrollmentStatus.NOT_STARTED,
+                assigned_by=user.id,
+                due_date=datetime.utcnow() + timedelta(days=course.expiry_days)
+            )
+            db.add(enrollment)
+            enrolled_count += 1
+
+        db.commit()
+
+        print(f"✅ [ADMIN] Bulk assigned course {course_id} to {enrolled_count} users, skipped {skipped_count}")
+
+        return {
+            "message": "Bulk assignment completed",
+            "enrolled_count": enrolled_count,
+            "skipped_count": skipped_count,
+            "total_requested": len(user_id_list)
+        }
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [ADMIN] Error in bulk assignment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during bulk assignment: {str(e)}"
+        )
+
+
+# ====================================================
+# 👑 ADMIN: GET ALL USERS WITH TRAINING STATUS
+# ====================================================
+
+@app.get("/api/admin/users-training-status")
+def get_users_training_status(
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    """
+    Admin gets all users with their training status, login times, compliance
+    """
+    try:
+        user = verify_token(token, db)
+
+        # Only allow Admin
+        if user.role != "Admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Admins can access this endpoint"
+            )
+
+        # Get all users
+        all_users = db.query(models.User).all()
+
+        users_data = []
+        for u in all_users:
+            # Get enrollments for this user
+            enrollments = db.query(models.Enrollment).filter(
+                models.Enrollment.user_id == u.id
+            ).all()
+
+            total_courses = len(enrollments)
+            completed = len([e for e in enrollments if e.status == models.EnrollmentStatus.COMPLETED])
+            in_progress = len([e for e in enrollments if e.status == models.EnrollmentStatus.IN_PROGRESS])
+            overdue = len([e for e in enrollments if e.status == models.EnrollmentStatus.OVERDUE])
+
+            compliance_rate = round((completed / total_courses * 100), 1) if total_courses > 0 else 0.0
+
+            users_data.append({
+                "id": u.id,
+                "name": u.name,
+                "email": u.email,
+                "role": u.role,
+                "branch": u.branch,
+                "last_login": u.last_login.isoformat() if u.last_login else None,
+                "join_date": u.join_date.isoformat() if u.join_date else None,
+                "total_courses": total_courses,
+                "completed_courses": completed,
+                "in_progress_courses": in_progress,
+                "overdue_courses": overdue,
+                "compliance_rate": compliance_rate,
+                "avatar": u.avatar
+            })
+
+        print(f"✅ [ADMIN] Retrieved training status for {len(users_data)} users")
+        return users_data
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [ADMIN] Error fetching user training status: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching user training status: {str(e)}"
+        )
+
+
+# ====================================================
+# 👑 ADMIN: DASHBOARD STATS (AUDITING & COMPLIANCE)
+# ====================================================
+
+@app.get("/api/admin/dashboard-stats")
+def get_admin_dashboard_stats(
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    """
+    Admin gets comprehensive dashboard statistics for auditing and compliance
+    """
+    try:
+        user = verify_token(token, db)
+
+        # Only allow Admin
+        if user.role != "Admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Admins can access this endpoint"
+            )
+
+        # Get all users
+        all_users = db.query(models.User).all()
+        total_users = len(all_users)
+
+        # Count by role
+        role_distribution = {}
+        for u in all_users:
+            role_str = u.role.value if hasattr(u.role, 'value') else str(u.role)
+            role_distribution[role_str] = role_distribution.get(role_str, 0) + 1
+
+        # Get all enrollments
+        all_enrollments = db.query(models.Enrollment).all()
+        total_enrollments = len(all_enrollments)
+
+        # Calculate statuses
+        completed_enrollments = len([e for e in all_enrollments if e.status == models.EnrollmentStatus.COMPLETED])
+        in_progress_enrollments = len([e for e in all_enrollments if e.status == models.EnrollmentStatus.IN_PROGRESS])
+        overdue_enrollments = len([e for e in all_enrollments if e.status == models.EnrollmentStatus.OVERDUE])
+        not_started_enrollments = len([e for e in all_enrollments if e.status == models.EnrollmentStatus.NOT_STARTED])
+
+        # Overall compliance rate
+        overall_compliance = round((completed_enrollments / total_enrollments * 100),
+                                   1) if total_enrollments > 0 else 0.0
+
+        # Get all courses
+        all_courses = db.query(models.Course).all()
+        total_courses = len(all_courses)
+
+        # Get all certificates
+        all_certificates = db.query(models.Certificate).all()
+        total_certificates = len(all_certificates)
+
+        # Users who logged in recently (last 7 days)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        active_users = len([u for u in all_users if u.last_login and u.last_login > seven_days_ago])
+
+        # Users who never logged in
+        never_logged_in = len([u for u in all_users if not u.last_login])
+
+        stats = {
+            "total_users": total_users,
+            "active_users_7_days": active_users,
+            "never_logged_in": never_logged_in,
+            "total_courses": total_courses,
+            "total_enrollments": total_enrollments,
+            "completed_enrollments": completed_enrollments,
+            "in_progress_enrollments": in_progress_enrollments,
+            "overdue_enrollments": overdue_enrollments,
+            "not_started_enrollments": not_started_enrollments,
+            "overall_compliance_rate": overall_compliance,
+            "total_certificates": total_certificates,
+            "role_distribution": role_distribution,
+            "avg_courses_per_user": round(total_enrollments / total_users, 1) if total_users > 0 else 0.0
+        }
+
+        print(f"✅ [ADMIN] Dashboard stats calculated: {stats}")
+        return stats
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ [ADMIN] Error fetching dashboard stats: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching dashboard stats: {str(e)}"
         )
 
 

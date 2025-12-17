@@ -354,6 +354,7 @@ export const adminAPI = {
     if (!res.ok) throw new Error("Failed to fetch users");
     return await res.json();
   },
+
   assignSupervisor: async (supervisorId, memberId) => {
     const res = await fetch(`${API_BASE}/api/admin/assign-supervisor`, {
       method: "POST",
@@ -382,6 +383,61 @@ export const adminAPI = {
       }),
     });
     return res.json();
+  },
+
+  // Get all users with training status
+  getUsersTrainingStatus: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/users-training-status`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch users training status");
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching users training status:", error);
+      return [];
+    }
+  },
+
+  // Get admin dashboard stats
+  getDashboardStats: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/dashboard-stats`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch dashboard stats");
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      return null;
+    }
+  },
+
+  // Bulk assign course to multiple users
+  bulkAssignCourse: async (courseId, userIds) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/assign-course-bulk`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${getToken()}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          course_id: courseId,
+          user_ids: userIds, // comma-separated string like "1,2,3,5"
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || "Failed to bulk assign course");
+      }
+      return await res.json();
+    } catch (error) {
+      console.error("Error in bulk assign:", error);
+      throw error;
+    }
   },
 };
 

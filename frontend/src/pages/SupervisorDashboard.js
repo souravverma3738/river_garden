@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Users, BookOpen, UserPlus, Eye } from 'lucide-react';
+import { Users, BookOpen, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../Component/ui/card';
 import { Button } from '../Component/ui/button';
 import { Badge } from '../Component/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../Component/ui/avatar';
 import { supervisorAPI } from '../services/api';
-import { AssignCourseDialog } from '../Component/supervisor/AssignCourseDialog';
 import { MemberDetailDialog } from '../Component/supervisor/MemberDetailDialog';
 import { toast } from 'sonner';
 
@@ -13,7 +12,6 @@ export const SupervisorDashboard = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [stats, setStats] = useState({ active_courses: 0, completion_rate: 0 });
   const [loading, setLoading] = useState(true);
-  const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [showMemberDetail, setShowMemberDetail] = useState(false);
 
@@ -44,11 +42,6 @@ export const SupervisorDashboard = () => {
     } else {
       toast.error(message);
     }
-  };
-
-  const handleAssignSuccess = (message) => {
-    showToast(message, 'success');
-    loadTeamData(); // Refresh team data
   };
 
   const handleCourseRemoved = (message) => {
@@ -190,16 +183,6 @@ export const SupervisorDashboard = () => {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => setShowAssignDialog(true)}
-                disabled={teamMembers.length === 0}
-                data-testid="assign-course-button"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Assign Course
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
                 onClick={() => loadTeamData()}
                 data-testid="refresh-button"
               >
@@ -214,28 +197,25 @@ export const SupervisorDashboard = () => {
               <CardTitle className="text-lg">Your Responsibilities</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>✓ Assign training courses to your team</p>
               <p>✓ Monitor team member progress</p>
-              <p>✓ Remove courses when needed</p>
-              <p>✓ Ensure compliance with training requirements</p>
+              <p>✓ View course completion status</p>
+              <p>✓ Track training compliance</p>
+              <p>✓ Support team learning needs</p>
+              <p className="text-xs mt-4 pt-4 border-t">
+                ℹ️ Course assignments are now managed by administrators
+              </p>
             </CardContent>
           </Card>
         </div>
       </div>
 
       {/* Dialogs */}
-      <AssignCourseDialog
-        isOpen={showAssignDialog}
-        onClose={() => setShowAssignDialog(false)}
-        teamMembers={teamMembers}
-        onSuccess={handleAssignSuccess}
-      />
-
       <MemberDetailDialog
         isOpen={showMemberDetail}
         onClose={() => setShowMemberDetail(false)}
         member={selectedMember}
         onCourseRemoved={handleCourseRemoved}
+        isSupervisor={true}
       />
     </div>
   );

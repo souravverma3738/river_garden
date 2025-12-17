@@ -52,6 +52,7 @@ class User(Base):
     join_date = Column(DateTime, default=datetime.utcnow)
     avatar = Column(String, nullable=True)
     manager_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    last_login = Column(DateTime, nullable=True)  # Track last login time
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
