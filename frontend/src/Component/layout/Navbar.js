@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {  BrowserRouter,Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Bell, User, LogOut, BookOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -67,17 +67,48 @@ export const Navbar = ({ user, onLogout }) => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-8">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-              >
-                {item.name}
-              </a>
-            ))}
-          </div>
+        
+<div className="hidden md:flex md:items-center md:space-x-8">
+  {isLandingPage ? (
+    <>
+      <a href="#features" className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary">
+        Features
+      </a>
+      <a href="#how-it-works" className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary">
+        How It Works
+      </a>
+      <a href="#benefits" className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary">
+        Benefits
+      </a>
+      <a href="#contact" className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary">
+        Contact
+      </a>
+    </>
+  ) : (
+    <>
+      <Link
+        to="/dashboard"
+        className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+      >
+        Dashboard
+      </Link>
+
+      <Link
+        to="/courses"
+        className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+      >
+        My Courses
+      </Link>
+
+      <Link
+        to="/certificates"
+        className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+      >
+        Certificates
+      </Link>
+    </>
+  )}
+</div>
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
@@ -159,23 +190,29 @@ export const Navbar = ({ user, onLogout }) => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t">
-          <div className="space-y-1 px-4 pb-3 pt-2">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="block rounded-md px-3 py-2 text-base font-medium text-foreground/80 hover:bg-accent hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </a>
-            ))}
-          </div>
-        </div>
+  <div className="md:hidden border-t">
+    <div className="space-y-1 px-4 pb-3 pt-2">
+
+      {isLandingPage ? (
+        <>
+          <a href="#features" className="mobile-link">Features</a>
+          <a href="#how-it-works" className="mobile-link">How It Works</a>
+          <a href="#benefits" className="mobile-link">Benefits</a>
+          <a href="#contact" className="mobile-link">Contact</a>
+        </>
+      ) : (
+        <>
+          <Link to="/dashboard" className="mobile-link" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+          <Link to="/courses" className="mobile-link" onClick={() => setMobileMenuOpen(false)}>My Courses</Link>
+          <Link to="/certificates" className="mobile-link" onClick={() => setMobileMenuOpen(false)}>Certificates</Link>
+        </>
       )}
+
+    </div>
+  </div>
+)}
+
 
       {/* Notification Panel */}
       <NotificationPanel
